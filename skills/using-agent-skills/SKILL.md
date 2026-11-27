@@ -1,46 +1,69 @@
 ---
 name: using-agent-skills
-description: Discovers and invokes agent skills. Use when starting a session, or when you need to decide which skill or workflow applies to the piece of work at hand. This is the meta-skill that governs how all other skills are discovered and invoked.
+description: Discovers and invokes agent skills and OpenSpec workflows. Use when starting a session, or when you need to decide which skill, OpenSpec step, or engineering workflow applies to the piece of work at hand. This is the meta-skill that governs how all other skills are discovered and invoked.
 ---
-
 # Using Agent Skills
 
 ## Overview
 
-Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+This workspace combines two complementary workflow systems:
+
+- **OpenSpec (`openspec*`)** owns the specification and change lifecycle: exploring ideas, writing proposals/specs/design/tasks (`openspec/changes/`), applying planned tasks, and syncing/archiving back into `openspec/specs/`.
+- **Agent Skills** owns engineering discipline across every phase: requirements interviewing, quality constraints, architecture/UI/API design, TDD, debugging, multi-axis review, simplification, git/CI/CD, observability, docs/ADRs, and shipping.
+
+This meta-skill helps you decide **when to enter the OpenSpec workflow** and **which engineering skills to pair with it** for the task at hand.
+
+## When to Use OpenSpec vs. Direct Skills
+
+### Use OpenSpec (`openspec*`) when:
+- **New feature or non-trivial change** — anything that adds or changes user-visible behavior, touches multiple files/modules, alters APIs/data contracts, or requires an architectural decision.
+- **Exploring a problem or design space** in an OpenSpec-enabled project before committing to a plan → start with `openspec-explore` (use `interview-me` first if the user's underlying intent is still unclear).
+- **Ready to define a reviewable plan before coding** → `openspec-propose` (creates proposal, delta specs, design, and `tasks.md` in `openspec/changes/<name>/`).
+- **Revising an existing change's plan** or folding in new decisions → `openspec-update-change`.
+- **Implementing tasks from an approved change** → `openspec-apply-change` (paired with relevant build/verify skills below).
+- **Updating main specs or closing out a completed change** → `openspec-sync-specs` (keep change open) or `openspec-archive-change` (finalize and archive).
+- **Unsure where OpenSpec changes stand** or requesting several OpenSpec steps at once → start with `openspec`.
+
+### Skip OpenSpec (go straight to engineering skills) when:
+- **Small, self-contained edits** — single-line fixes, typo corrections, formatting/comment adjustments, or unambiguous micro-fixes that do not change system specifications.
+- **Targeted maintenance with unchanged specs** — root-cause bug fixing (`debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`), code review (`code-review-and-quality`), behavior-preserving cleanup (`code-simplification`), or git/CI/CD/docs housekeeping.
+- **Project does not use OpenSpec** (`openspec list --json` reports `"root": null`) and the user did not ask to adopt OpenSpec.
 
 ## Skill Discovery
 
-When a task arrives, identify the development phase and apply the corresponding skill:
+When a task arrives, first decide whether it belongs in the OpenSpec lifecycle, then pair the matching engineering skills:
 
 ```
 Task arrives
     │
-    ├── Don't know what you want yet? ──────→ interview-me
-    ├── Have a rough concept, need variants? → idea-refine
-    ├── New project/feature/change? ──→ spec-driven-development
-    ├── No quality bar written down? ──→ constraint-driven-development
-    ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
-    ├── Implementing code? ────────────→ incremental-implementation
-    │   ├── UI work? ─────────────────→ frontend-ui-engineering
-    │   ├── API work? ────────────────→ api-and-interface-design
-    │   ├── Need better context? ─────→ context-engineering
-    │   ├── Need doc-verified code? ───→ source-driven-development
-    │   └── Stakes high / unfamiliar code? ──→ doubt-driven-development
-    ├── Writing/running tests? ────────→ test-driven-development
-    │   └── Browser-based? ───────────→ browser-testing-with-devtools
-    ├── Something broke? ──────────────→ debugging-and-error-recovery
-    ├── Reviewing code? ───────────────→ code-review-and-quality
-    │   ├── Too complex? ─────────────→ code-simplification
-    │   ├── Security concerns? ───────→ security-and-hardening
-    │   ├── Performance concerns? ────→ performance-optimization
-    │   └── Accessibility concerns? ──→ accessibility-engineering
-    ├── Committing/branching? ─────────→ git-workflow-and-versioning
-    ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
-    ├── Deprecating/migrating? ────────→ deprecation-and-migration
-    ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
-    ├── Adding logs/metrics/alerts? ───→ observability-and-instrumentation
-    └── Deploying/launching? ─────────→ shipping-and-launch
+    ├── Don't know what you want yet? ──────────────→ interview-me
+    ├── OpenSpec status / multi-step / unsure? ─────→ openspec
+    ├── Explore idea or design space (pre-plan)? ───→ openspec-explore
+    ├── New feature / behavior change (need plan)? ─→ openspec-propose
+    ├── Revise an existing OpenSpec change plan? ───→ openspec-update-change
+    ├── No quality bar written down? ───────────────→ constraint-driven-development
+    ├── Implementing an OpenSpec change? ───────────→ openspec-apply-change
+    │   ├── UI work? ───────────────────────────────→ frontend-ui-engineering
+    │   ├── API / module contract work? ────────────→ api-and-interface-design
+    │   ├── Need better context? ───────────────────→ context-engineering
+    │   ├── Need doc-verified code? ────────────────→ source-driven-development
+    │   └── Stakes high / unfamiliar code? ─────────→ doubt-driven-development
+    ├── Writing / running tests? ───────────────────→ test-driven-development
+    │   └── Browser-based? ─────────────────────────→ browser-testing-with-devtools
+    ├── Something broke? ───────────────────────────→ debugging-and-error-recovery
+    ├── Reviewing code? ────────────────────────────→ code-review-and-quality
+    │   ├── Too complex? ───────────────────────────→ code-simplification
+    │   ├── Security concerns? ─────────────────────→ security-and-hardening
+    │   ├── Performance concerns? ──────────────────→ performance-optimization
+    │   └── Accessibility concerns? ────────────────→ accessibility-engineering
+    ├── Sync delta specs (keep change open)? ───────→ openspec-sync-specs
+    ├── Finish & archive an OpenSpec change? ───────→ openspec-archive-change
+    ├── Committing / branching / PRs? ──────────────→ git-workflow-and-versioning
+    ├── CI/CD pipeline work? ───────────────────────→ ci-cd-and-automation
+    ├── Deprecating / migrating? ───────────────────→ deprecation-and-migration
+    ├── Writing docs / ADRs? ───────────────────────→ documentation-and-adrs
+    ├── Adding logs / metrics / alerts? ────────────→ observability-and-instrumentation
+    └── Deploying / launching? ─────────────────────→ shipping-and-launch
 ```
 
 ## Core Operating Behaviors
@@ -135,44 +158,60 @@ These are the subtle errors that look like productivity but create problems:
 
 2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
 
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `code-simplification` → `shipping-and-launch` in sequence.
+3. **Multiple skills can apply.** A complete feature in an OpenSpec project typically flows through `interview-me` → `openspec-explore` → `openspec-propose` → `openspec-apply-change` (paired with `test-driven-development` and relevant build skills) → `code-review-and-quality` → `code-simplification` → `openspec-archive-change` → `shipping-and-launch`.
 
-4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
+4. **When in doubt, start with OpenSpec.** If a task is non-trivial, changes system behavior, and has no active spec or change in an OpenSpec project, begin with `openspec-explore` or `openspec-propose` (or `interview-me` first if requirements are still vague).
 
 ## Lifecycle Sequence
 
-For a complete feature, the typical skill sequence is:
+For a complete feature in an OpenSpec-managed project, the typical sequence is:
 
 ```
-1.  interview-me                → Extract what the user actually wants
-2.  idea-refine                 → Refine vague ideas
-3.  spec-driven-development     → Define what we're building
-4.  planning-and-task-breakdown → Break into verifiable chunks
-5.  context-engineering         → Load the right context
-6.  source-driven-development   → Verify against official docs
-7.  incremental-implementation  → Build slice by slice
-8.  observability-and-instrumentation → Instrument as you build (runs parallel with 7-9, not after)
-9.  doubt-driven-development    → Cross-examine non-trivial decisions in-flight
-10. test-driven-development     → Prove each slice works
-11. code-review-and-quality     → Review before merge
-12. code-simplification         → Reduce unnecessary complexity while preserving behavior
-13. git-workflow-and-versioning → Clean commit history
-14. documentation-and-adrs      → Document decisions
-15. deprecation-and-migration   → Retire old systems and move users safely when needed
-16. shipping-and-launch         → Deploy safely
+1.  interview-me                        → Extract what the user actually wants (when intent is underspecified)
+2.  openspec-explore                    → Explore ideas, investigate codebase, and weigh tradeoffs before planning
+3.  openspec-propose                    → Create proposal, delta specs, design, and tasks.md in openspec/changes/
+4.  constraint-driven-development       → Establish or verify CONSTRAINTS.md quality bar (when not yet defined)
+5.  context-engineering                 → Load the right specs, constraints, and code context
+6.  source-driven-development           → Verify framework/library decisions against official docs
+7.  openspec-apply-change               → Implement planned tasks cleanly in small, verifiable steps
+    (pair with: api-and-interface-design, frontend-ui-engineering, observability-and-instrumentation)
+8.  doubt-driven-development            → Cross-examine high-stakes or non-trivial decisions in-flight
+9.  test-driven-development             → Write failing tests first and prove each task works
+    (pair with: browser-testing-with-devtools for browser UI)
+10. openspec-update-change              → Revise the change artifacts if scope or design decisions shift mid-flight
+11. code-review-and-quality             → Five-axis review before merge
+    (pair with: security-and-hardening, performance-optimization, accessibility-engineering)
+12. code-simplification                 → Reduce unnecessary complexity while preserving behavior
+13. openspec-sync-specs / archive       → Sync delta specs or run openspec-archive-change once verified
+14. git-workflow-and-versioning         → Clean atomic commits, branching, and PRs
+15. documentation-and-adrs              → Record ADRs and keep docs in sync
+16. deprecation-and-migration           → Retire old systems and migrate users safely when needed
+17. shipping-and-launch                 → Pre-launch checks, monitoring, and rollback readiness
 ```
 
-Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
+Not every task needs every skill. A targeted bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
+
+## Specialist Subagents (Optional Delegation)
+
+When deep, independent review or test work is needed, delegate to the specialist subagents (defined under `agents/` when registered):
+
+- `code-reviewer` — read-only five-axis code review
+- `security-auditor` — read-only vulnerability and threat-model audit
+- `test-engineer` — test strategy, coverage gap analysis, and Prove-It/regression test authoring
+- `accessibility-auditor` — read-only WCAG 2.2 accessibility audit
+- `web-performance-auditor` — read-only Core Web Vitals and loading/rendering audit
 
 ## Quick Reference
 
 | Phase | Skill | One-Line Summary |
 |-------|-------|-----------------|
 | Define | interview-me | Surface what the user actually wants before any plan, spec, or code exists |
-| Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
-| Define | spec-driven-development | Requirements and acceptance criteria before code |
-| Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
-| Build | incremental-implementation | Thin vertical slices, test each before expanding |
+| Define | openspec | Starting point for OpenSpec status checks, routing, and multi-step OpenSpec work |
+| Define | openspec-explore | Explore ideas, investigate problems, and clarify tradeoffs before proposing a change |
+| Plan | openspec-propose | Create a complete OpenSpec change with proposal, delta specs, design, and tasks |
+| Plan | openspec-update-change | Revise existing OpenSpec change artifacts and keep them coherent |
+| Quality | constraint-driven-development | Define and enforce project quality thresholds in CONSTRAINTS.md |
+| Build | openspec-apply-change | Implement tasks from an approved OpenSpec change |
 | Build | source-driven-development | Verify against official docs before implementing |
 | Build | doubt-driven-development | Adversarial fresh-context review of every non-trivial decision |
 | Build | context-engineering | Right context at the right time |
@@ -186,6 +225,8 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |
 | Review | accessibility-engineering | Audit an existing interface for WCAG 2.2 AA and remediate the violations found |
+| Close | openspec-sync-specs | Sync delta specs from an open change to main specs without archiving |
+| Close | openspec-archive-change | Finalize a completed change, merge delta specs, and archive it |
 | Ship | git-workflow-and-versioning | Atomic commits, clean history |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
 | Ship | deprecation-and-migration | Remove old systems and migrate users safely |
